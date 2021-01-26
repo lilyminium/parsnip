@@ -1,0 +1,4 @@
+
+namespace polytop {
+    Topology::Topology() {};
+}
