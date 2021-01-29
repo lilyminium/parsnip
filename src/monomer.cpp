@@ -15,24 +15,12 @@ namespace polytop {
         resName = name;
     };
 
-    int Monomer::delAtom(Atom &atom) {
-        auto found = std::find(atoms.begin(), atoms.end(), &atom);
-        if (found != atoms.end()) {
-            // int index = std::distance(atoms.begin(), found);
-            atoms.erase(found);
-        }
-
-        return atoms.size();
-    }
+    
 
 
     int Monomer::addAtom(Atom &atom) {
-        atoms.push_back(&atom);
+        atoms.emplace_back(&atom);
         return atoms.size();
-    }
-
-    MonomerUnit::MonomerUnit(Monomer mol) {
-        
     }
 
     

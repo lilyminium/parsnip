@@ -13,6 +13,7 @@ int main() {
     using namespace polytop;
     
     Monomer mol = Monomer("ALA");
+    Polymer pol = Polymer("PolyAla");
     Atom atom = Atom(mol);
     mol.addAtom(atom);
     std::cout << mol.resName << std::endl;

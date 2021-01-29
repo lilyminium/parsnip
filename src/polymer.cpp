@@ -16,6 +16,10 @@
 
 namespace polytop {
 
+    Polymer::Polymer(std::string name) {
+        name = name;
+    };
+
     // int Polymer::addMonomerUnit(MonomerUnit unit, MonoPolyAtomIndexVect atomIndices,
     //                             bool replacePolymerAtoms) {
     //     // align positions
