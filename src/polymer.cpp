@@ -1,4 +1,5 @@
 #include <vector>
+#include <utility>
 
 #include <GraphMol/FMCS/FMCS.h>
 #include <GraphMol/GraphMol.h>
@@ -16,50 +17,81 @@
 
 namespace polytop {
 
-    Polymer::Polymer(std::string name) {
-        name = name;
+    Polymer::Polymer(std::string name_) {
+        name = name_;
     };
 
-    // int Polymer::addMonomerUnit(MonomerUnit unit, MonoPolyAtomIndexVect atomIndices,
-    //                             bool replacePolymerAtoms) {
-    //     // align positions
-    //     RDKit::MolAlign::alignMol(unit.rdMol, rdMol, 0, 0, &atomIndices);
-    //     // move monomer atoms into polymer
-    //     addMonomerUnit(unit);
+    void Polymer::addMonomerUnit(MonomerUnit unit, MonoPolyAtomIndexVect atomIndices,
+                                bool replacePolymerAtoms) {
+        // align positions
+        RDKit::MolAlign::alignMol(unit.rdMol, rdMol, 0, 0, &atomIndices);
+        
 
-    //     // remove doubled-up atoms and topology parameters
-    //     if (replacePolymerAtoms) {
-    //         std::set<int> polyAtomIndices;
-    //         for (auto& el : atomIndices) {
-    //             polyAtomIndices.insert(el.second);
-    //         }
-    //         removeParamsWithinAtomSet(polyAtomIndices);
+        // remove doubled-up atoms and topology parameters
+        std::set<Atom*> atomSet;
+        std::vector<std::pair<Atom*, Atom*>> atomVector;
+        atomVector.reserve(atomIndices.size());
 
-    //         for (auto& el : atomIndices) {
-    //             int polyAtomIndex = el.second;
-    //             int monoAtomIndex = el.first;
+
+        if (replacePolymerAtoms) {
+            for (auto &el : atomIndices) {
+                atomSet.insert(atoms[el.second]);
+                atomVector.emplace_back(std::pair<Atom*, Atom*>(unit.atoms[el.first],
+                                                                atoms[el.second]));
+            }
+            for (auto &atom : atoms) { atom->removeParamsWithinAtomSet(atomSet); }
+        }
+        else {
+            for (auto &el : atomIndices) {
+                atomSet.insert(unit.atoms[el.first]);
+                atomVector.emplace_back(std::pair<Atom*, Atom*>(atoms[el.second],
+                                                                unit.atoms[el.first]));
+            }
+            for (auto &atom : unit.atoms) { atom->removeParamsWithinAtomSet(atomSet); }
+        }
+
+        // move monomer atoms into polymer
+        addMonomerUnit(unit);
+
+        for (auto &el : atomVector) {
+            el.second->replaceWithAtom(*(el.first));
+        }
+
+
+
+
+
+
+
+
+        // if (replacePolymerAtoms) {
+        //     std::set<int> polyAtomIndices;
+        //     for (auto& el : atomIndices) {
+        //         polyAtomIndices.insert(el.second);
+        //     }
+        //     removeParamsWithinAtomSet(polyAtomIndices);
+
+        //     for (auto& el : atomIndices) {
+        //         int polyAtomIndex = el.second;
+        //         int monoAtomIndex = el.first;
                 
-    //             atoms[polyAtomIndex].replaceWithAtom(unit.atoms[monoAtomIndex]);
+        //         atoms[polyAtomIndex].replaceWithAtom(unit.atoms[monoAtomIndex]);
 
-    //         };
-    //     };
-    // };
+        //     };
+        // };
+    };
 
-    // int Polymer::addMonomerUnit(MonomerUnit unit) {
-    //     // add atoms
-    //     atoms.insert(atoms.end(), unit.atoms.begin(), unit.atoms.end());
-    //     reindexAtoms(true);
+    void Polymer::addMonomerUnit(MonomerUnit unit) {
+        // add atoms
+        atoms.insert(atoms.end(), unit.atoms.begin(), unit.atoms.end());
+        rdMol.insertMol(unit.rdMol);
+        this->reindexAtoms(true);
 
-    //     // add parameters and stuff
-    //     bonds.insert(unit.bonds.begin(), unit.bonds.end());
-    // };
+        std::cout << rdMol.getNumAtoms() << " heavy atoms in rdmol reindex 0" << std::endl;
+        std::cout << atoms[atoms.size()-1]->owningMol->rdMol.getNumAtoms() << " heavy atoms in rdmol reindex" << std::endl;
+    };
 
-    // void Polymer::reindexAtoms(bool setOwningMol) {
-    //     for (size_t i = 0; i < atoms.size(); i++) {
-    //         atoms[i].index = i;
-    //         if (setOwningMol) {atoms[i].setOwningMol(&this); };
-    //     }
-    // }
+    
 
     // int Polymer::addMonomer(Monomer monomer, bool useMonomerParams,
     //                         bool replacePolymerAtoms) {

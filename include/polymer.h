@@ -13,26 +13,33 @@ namespace polytop {
 
     using MonoPolyAtomIndexVect = RDKit::MatchVectType;
 
-    class Polymer : MonomerUnit {
+    class Polymer : public MonomerUnit {
         // friend class Monomer;
         // friend class MonomerUnit;
 
         public:
-            // int addMonomerUnit(MonomerUnit unit, MonoPolyAtomIndexVect atomIndices,
-            //                    bool replacePolymerAtoms=true);
+            Polymer(std::string name="UNK");
+            // std::string name;
+            void addMonomerUnit(MonomerUnit unit, MonoPolyAtomIndexVect atomIndices,
+                               bool replacePolymerAtoms=true);
 
-            // int addMonomerUnit(MonomerUnit unit);
+            void addMonomerUnit(MonomerUnit unit);
+            // void removeParamsWithinAtomSet(std::set<Atom*> atomSet);
             
             // int addMonomer(Monomer monomer, bool useMonomerParams=true,
             //                bool replacePolymerAtoms=true);
 
+            
+            double charge = 0;
+
             // void reindexAtoms(bool setOwningMol=true);
 
 
-        // protected:
-            RDKit::RWMol rdMol;
+
+
+            // RDKit::RWMol rdMol = RDKit::RWMol();
             // std::vector<MonomerUnit> monomers;
-            // std::vector<Atom> atoms;
+            // std::vector<Atom*> atoms;
             // std::unordered_multimap<std::array<int, 2>, Bond> bonds;
 
     };

@@ -10,21 +10,24 @@
 
 namespace polytop {
     class Atom;
-    
+    class Monomer;
+    class MonomerUnit;
 
     template <typename T> class ParamVector {
         friend class Atom;
 
         public:
             ParamVector(Atom *atom);
-            typename std::vector<std::shared_ptr<T>>::iterator begin() {return data.begin();}
-            typename std::vector<std::shared_ptr<T>>::iterator end() {return data.end();}
+            typename std::vector<T*>::iterator begin() {return data.begin();}
+            typename std::vector<T*>::iterator end() {return data.end();}
             ParamVector<T> getCorrespondingParamVector(Atom *atom);
             std::size_t updateAtom(Atom &newAtom);
-            std::size_t addParam(std::shared_ptr<T> param);
+            std::size_t addParam(T *param);
+            void copyParamsTo(Monomer &mol);
+            void copyParamsTo(MonomerUnit &mol);
             std::size_t removeParamsWithinAtomSet(std::set<Atom*>);
 
-            std::vector<std::shared_ptr<T>> data;
+            std::vector<T*> data;
             Atom *atom;
             
 
@@ -32,15 +35,16 @@ namespace polytop {
     };
 
     template <typename T>
-    ParamVector<T>::ParamVector(Atom *atom) {
-        atom = atom;
+    ParamVector<T>::ParamVector(Atom *newAtom) {
+        atom = newAtom;
     }
 
     template <typename T>
-    std::size_t ParamVector<T>::addParam(std::shared_ptr<T> param) {
+    std::size_t ParamVector<T>::addParam(T *param) {
         data.push_back(std::move(param));
         return data.size();
     };
+
 
     template <typename T>
     std::size_t ParamVector<T>::updateAtom(Atom &newAtom) {

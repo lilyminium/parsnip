@@ -8,42 +8,42 @@
 #ifndef _PT_ATOM_H
 #define _PT_ATOM_H
 
-// #include <GraphMol/GraphMol.h>
-
-// #include "bond.h"
+#include <GraphMol/GraphMol.h>
 
 #include "paramvector.h"
 
 namespace polytop {
-
-    typedef std::hash<std::string> hash_string;
-
     class Monomer;
     class MonomerUnit;
+    
+    
     class Atom {
 
         public:
 
-            Atom();
-            Atom(Monomer &mol);
-            Atom(MonomerUnit &mol);
-            // RDKit::Atom rdAtom;
-
-            int index = 0;
-            void replaceWithAtom(Atom newAtom);
-            std::unique_ptr<Atom> copy();
-            void removeParamsWithinAtomSet(std::set<Atom*> atomSet);
-            void copyToMol(MonomerUnit mol);
+            // Atom();
+            // Atom(const Atom &rhs);
+            // Atom(Monomer &mol);
+            // Atom(MonomerUnit &mol);
+            Atom(Monomer &mol, int atomIndex);
+            Atom(MonomerUnit &mol, int atomIndex);
 
             Monomer *owningMol;
+            int index = 0;
+            double charge = 0;
             std::string name = "X";
+
             BondVector bonds = BondVector(this);
             PairVector pairs = PairVector(this);
             ExclusionVector exclusions = ExclusionVector(this);
             AngleVector angles = AngleVector(this);
             DihedralVector dihedrals = DihedralVector(this);
             ImproperVector impropers = ImproperVector(this);
-            
+
+            void setRDAtom(RDKit::Atom *atom, bool updateCharge=false);
+
+            void replaceWithAtom(Atom newAtom);
+            void removeParamsWithinAtomSet(std::set<Atom*> atomSet);
 
     };
 };

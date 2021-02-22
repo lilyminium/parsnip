@@ -1,22 +1,18 @@
 {
-  "env": {
-    "myDefaultIncludePath": ["${workspaceFolder}", "${workspaceFolder}/include",
-                             "/Users/lily/anaconda3/envs/polytop/include/rdkit",
-                             "/Users/lily/anaconda3/envs/polytop/include/"],
-    "myCompilerPath": "/usr/local/bin/gcc-7"
-  },
   "configurations": [
     {
       "name": "Mac",
-      "intelliSenseMode": "clang-x64",
-      "includePath": ["${myDefaultIncludePath}"],
-      "macFrameworkPath": ["/System/Library/Frameworks"],
-      "defines": ["FOO", "BAR=100"],
-      // "forcedInclude": ["${workspaceFolder}/include/config.h"],
+      "includePath": ["${workspaceFolder}/include",
+                      "/Users/lily/anaconda3/envs/polytop/include/rdkit",
+                      "/Users/lily/anaconda3/envs/polytop/include/"],
+      "defines": [],
+      "macFrameworkPath": [
+        "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
+      ],
       "compilerPath": "/usr/bin/clang",
       "cStandard": "c11",
-      "cppStandard": "c++17",
-      // "compileCommands": "/path/to/compile_commands.json",
+      "cppStandard": "c++11",
+      "intelliSenseMode": "clang-x64",
       "browse": {
         "path": ["${workspaceFolder}", "/Users/lily/anaconda3/envs/polytop/include/rdkit"],
         "limitSymbolsToIncludedHeaders": true,
@@ -26,4 +22,3 @@
   ],
   "version": 4
 }
-

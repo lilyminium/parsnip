@@ -1,0 +1,40 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "type": "shell",
+        "label": "clang++ build active file",
+        "command": "/usr/bin/clang++",
+        "args": [
+          "-std=c++11",
+          "-stdlib=libc++",
+        //   "-g",
+          "${workspaceFolder}/src/atom.cpp",
+          "${workspaceFolder}/src/monomer.cpp",
+          "${workspaceFolder}/src/polymer.cpp",
+          "${workspaceFolder}/src/main.cpp",
+          "-o",
+          "${workspaceFolder}/src/main",
+          "-I${workspaceFolder}/include/",
+          "-I/Users/lily/anaconda3/envs/polytop/include/rdkit",
+          "-I/Users/lily/anaconda3/envs/polytop/include/",
+          "-L/Users/lily/anaconda3/envs/polytop/lib",
+          "-lRDKitGraphMol",
+          "-lRDKitMolAlign",
+          "-lRDKitSmilesParse",
+          "-lRDKitFileParsers",
+          // "-Wall"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder}"
+        },
+        "problemMatcher": ["$gcc"],
+        "group": {
+          "kind": "build",
+          "isDefault": true
+        }
+      }
+    ]
+  }
