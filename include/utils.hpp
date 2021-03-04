@@ -17,6 +17,8 @@ namespace polytop {
             
     RDKit::RWMol* subsetRDMol(RDKit::RWMol rdMol, std::vector<unsigned int> indices);
 
+    RDKit::RWMol* copyRDMol(RDKit::RWMol rdMol);
+
 
     std::vector<unsigned int> splitIntegerIntoRatio(unsigned int total,
                                                     std::vector<double> ratio);

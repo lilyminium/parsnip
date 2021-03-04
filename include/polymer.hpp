@@ -41,11 +41,13 @@ namespace polytop {
             void addMonomerUnit(MonomerUnit* unit, std::string monomerTag,
                                 std::string polymerTag,
                                 bool replacePolymerAtoms=true);
+            void addUnit(MonomerUnit *unit);
 
             void reorderAtomsByMonomerUnit();
             void clearDeletedAtomsFromUnits();
             void getCappedUnits(std::size_t numNeighbors=3);
             void cleanUnitAtoms();
+            void cleanUnitParams();
 
             RDKit::RWMol* getRDUnit(MonomerUnit* unit, std::size_t numNeighbors);
 

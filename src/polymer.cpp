@@ -102,13 +102,14 @@ namespace polytop {
         addMonomerUnitAtoms(unit);
 
         for (auto &el : atomVector) {
-            replaceAtom(el.second, el.first);
+            replaceAtom(el.second, el.first, false);
         }
 
         delAtomsFromVector(toDelete);
         reindexAtoms();
         cleanUnitAtoms();
         addParamsFromMolecule(unit);
+        cleanUnitParams();
         unsafeAddTagsFrom(unit);
         cleanTags();
     };
@@ -116,14 +117,23 @@ namespace polytop {
     void Polymer::addMonomerUnitAtoms(MonomerUnit *unit) {
         // add atoms
         std::size_t previousSize = rdMol.getNumAtoms();
+        addUnit(unit);
         rdMol.insertMol(unit->rdMol);
         for (std::size_t i = 0; i < unit->atoms.size(); i++) {
-            unit->atoms[i]->rdAtom = rdMol.getAtomWithIdx(previousSize + i);
+            auto at = unit->atoms[i];
+            at->rdAtom = rdMol.getAtomWithIdx(previousSize + i);
+            // at->rdAtom->setMonomerInfo(at->resInfo);
+            at->updateMonomerInfo();
         }
         atoms.insert(atoms.end(), unit->atoms.begin(), unit->atoms.end());
+        
         reindexAtoms();
-        units.emplace_back(unit);
     };
+
+    void Polymer::addUnit(MonomerUnit *unit) {
+        units.emplace_back(unit);
+        unit->setResNum(units.size());
+    }
 
     void Polymer::addFromMoleculeUnit(MonomerUnit *unit) {
         // add atoms
@@ -153,9 +163,10 @@ namespace polytop {
 
     void Polymer::cleanUnitAtoms() {
         for (auto &un : units) {
-            for (auto &at : un->atoms) {
+            for (std::size_t i = un->atoms.size(); i > 0; --i) {
+                auto at = un->atoms[i];
                 if (!containsAtom(at)) {
-                    un->removeAtom(at);
+                    un->delAtomFromVector(at);
                 }
             }
         }
@@ -164,9 +175,15 @@ namespace polytop {
     RDKit::RWMol* Polymer::getRDUnit(MonomerUnit* unit, std::size_t numNeighbors) {
         std::vector<unsigned int> indices = unit->getAtomIndices();
         std::vector<unsigned int> neighbors = getNeighborInts(rdMol, indices, numNeighbors);
-        std::cout << indices.size() << " " << neighbors.size() << std::endl;
+        
         indices.insert(indices.end(), neighbors.begin(), neighbors.end());
         return subsetRDMol(rdMol, indices);
+    }
+
+    void Polymer::cleanUnitParams() {
+        for (auto un : units) {
+            un->cleanParams();
+        }
     }
 
     void Polymer::getCappedUnits(std::size_t numNeighbors) {

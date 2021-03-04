@@ -4,3 +4,4 @@
 // #include "test_utils.cpp"
 // #include "test_atoms.cpp"
 #include "test_monomer.cpp"
+#include "test_polymer.cpp"

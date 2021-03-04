@@ -9,6 +9,7 @@
 #define _PT_ATOM_H
 
 #include <GraphMol/GraphMol.h>
+#include <GraphMol/MonomerInfo.h>
 
 namespace polytop {
 
@@ -21,6 +22,15 @@ namespace polytop {
             double charge = 0;
             std::string name = "X";
             RDKit::Atom *rdAtom;
+            RDKit::AtomPDBResidueInfo *resInfo = new RDKit::AtomPDBResidueInfo();
+            void setResName(std::string resName);
+            std::string getResName();
+            void setResNum(unsigned int resNum);
+            int getResNum();
+            void setIndex(unsigned int atomIndex);
+            unsigned int getIndex();
+            unsigned int getSerial();
+            void updateMonomerInfo();
 
             void setRDAtom(RDKit::Atom *atom);
 

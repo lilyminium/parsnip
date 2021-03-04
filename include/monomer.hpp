@@ -8,6 +8,7 @@
 
 
 #include <GraphMol/GraphMol.h>
+#include <GraphMol/MonomerInfo.h>
 #ifndef _PT_MONOMER_H
 #define _PT_MONOMER_H
 
@@ -19,6 +20,8 @@ namespace polytop {
     class Monomer {
         // friend class Polymer;
 
+        typedef std::unordered_multimap<std::string, Tag*> TagMap;
+
         public:
             Monomer(std::string name="UNK") : name(name) {};
             Monomer(const RDKit::ROMol &mol, std::string name="UNK");
@@ -26,28 +29,28 @@ namespace polytop {
             RDKit::RWMol rdMol;
             std::string name;
             std::vector<Atom*> atoms;
-            std::unordered_multimap<std::string, Tag*> tags;
+            TagMap* tags = new TagMap();
 
-            BondVector bonds = BondVector();
-            PairVector pairs = PairVector();
-            ExclusionVector exclusions = ExclusionVector();
-            AngleVector angles = AngleVector();
-            DihedralVector dihedrals = DihedralVector();
-            ImproperVector impropers = ImproperVector();
+            BondVector* bonds = new BondVector();
+            PairVector* pairs = new PairVector();
+            ExclusionVector* exclusions = new ExclusionVector();
+            AngleVector* angles = new AngleVector();
+            DihedralVector* dihedrals = new DihedralVector();
+            ImproperVector* impropers = new ImproperVector();
 
-            BondVector getParamVector(Bond *param) {return bonds;};
-            AngleVector getParamVector(Angle *param) {return angles;};
-            DihedralVector getParamVector(Dihedral *param) {return dihedrals;};
-            ImproperVector getParamVector(Improper *param) {return impropers;};
-            PairVector getParamVector(Pair *param) {return pairs;};
-            ExclusionVector getParamVector(Exclusion *param) {return exclusions;};
+            BondVector* getParamVector(Bond *param) {return bonds;};
+            AngleVector* getParamVector(Angle *param) {return angles;};
+            DihedralVector* getParamVector(Dihedral *param) {return dihedrals;};
+            ImproperVector* getParamVector(Improper *param) {return impropers;};
+            PairVector* getParamVector(Pair *param) {return pairs;};
+            ExclusionVector* getParamVector(Exclusion *param) {return exclusions;};
 
-            BondVector getParamVector(BondVector param) {return bonds;};
-            AngleVector getParamVector(AngleVector param) {return angles;};
-            DihedralVector getParamVector(DihedralVector param) {return dihedrals;};
-            ImproperVector getParamVector(ImproperVector param) {return impropers;};
-            PairVector getParamVector(PairVector param) {return pairs;};
-            ExclusionVector getParamVector(ExclusionVector param) {return exclusions;};
+            BondVector* getParamVector(BondVector* param) {return bonds;};
+            AngleVector* getParamVector(AngleVector* param) {return angles;};
+            DihedralVector* getParamVector(DihedralVector* param) {return dihedrals;};
+            ImproperVector* getParamVector(ImproperVector* param) {return impropers;};
+            PairVector* getParamVector(PairVector* param) {return pairs;};
+            ExclusionVector* getParamVector(ExclusionVector* param) {return exclusions;};
 
             void setRDMol(RDKit::RWMol mol);
             RDKit::RWMol* rdMolFromAtoms(std::size_t numNeighbors=3);
@@ -57,13 +60,13 @@ namespace polytop {
 
             int addAtom(Atom &atom);
             std::size_t delAtomByIndex(unsigned int index);
-            std::size_t removeAtomByIndex(unsigned int index);
+            std::size_t removeAtomByIndex(unsigned int index, bool reindex=true);
             std::size_t delAtomFromVector(Atom *atom);
             std::size_t delAtomsFromVector(std::vector<Atom*> toDelete);
             std::size_t delAtomsFromVector(std::set<Atom*> toDelete);
-            std::size_t removeAtom(Atom *atom);
+            std::size_t removeAtom(Atom *atom, bool reindex=true);
             void reindexAtoms();
-            void replaceAtom(Atom *oldAtom, Atom *newAtom);
+            void replaceAtom(Atom *oldAtom, Atom *newAtom, bool reindex=true);
             void removeParamsWithinAtomSet(std::set<Atom*> atomSet);
             void removeParamsWithinAtomSetFromVector(std::set<Atom*> atomSet);
             void cleanParams();
@@ -91,15 +94,15 @@ namespace polytop {
             template <typename T>
             std::size_t addParam(T* param) {
                 auto vec = getParamVector(param);
-                vec.addParam(param);
-                return vec.data.size();
+                vec->addParam(param);
+                return vec->data.size();
             }
 
             template <typename T>
             std::size_t addParamFrom(T* param) {
                 auto vec = getParamVector(param);
-                vec.addParam(param);
-                return vec.data.size();
+                vec->addParam(param);
+                return vec->data.size();
             }
 
             template <typename T>
@@ -108,26 +111,26 @@ namespace polytop {
                 auto indices = param->getAtomIndices();
                 auto atoms = getAtomsByIndices(indices);
                 auto newParam = new T(atoms);
-                vec.addParam(newParam);
-                return vec.data.size();
+                vec->addParam(newParam);
+                return vec->data.size();
             }
 
             template <typename T>
-            std::size_t addParamsFromVector(T paramvector) {
+            std::size_t addParamsFromVector(T* paramvector) {
                 auto vec = getParamVector(paramvector);
-                for (auto &el : paramvector) {
+                for (auto &el : *paramvector) {
                     addParamFrom(el);
                 }
-                return vec.data.size();
+                return vec->data.size();
             }
 
             template <typename T>
-            std::size_t copyParamsFrom(T paramvector) {
+            std::size_t copyParamsFrom(T* paramvector) {
                 auto vec = getParamVector(paramvector);
-                for (auto &el : paramvector) {
-                    copyParamFrom(el);
+                for (auto &el : *paramvector) {
+                    auto size = copyParamFrom(el);
                 }
-                return vec.data.size();
+                return vec->data.size();
             }
 
             template <unsigned long nAtoms>
@@ -184,6 +187,8 @@ namespace polytop {
         public:
             MonomerUnit(Monomer *mol);
             MonomerUnit(){};
+
+            void setResNum(unsigned int resNum);
             
     };
 };

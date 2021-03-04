@@ -3,6 +3,8 @@
 #include <vector>
 #include <algorithm>
 
+#include <GraphMol/MonomerInfo.h>
+
 #include "utils.hpp"
 
 namespace polytop {
@@ -127,7 +129,17 @@ std::vector<unsigned int> getNeighborInts(RDKit::RWMol rdMol,
         }
 
         return currentRatio;
-    }
+    };
+
+    RDKit::RWMol* copyRDMol(RDKit::RWMol rdMol) {
+        RDKit::RWMol* newMol = new RDKit::RWMol(rdMol);
+        for (std::size_t i = 0; i < newMol->getNumAtoms(); i++) {
+            auto info = rdMol.getAtomWithIdx(i)->getMonomerInfo();
+            // auto newInfo = new RDKit::AtomPDBResidueInfo(*info);
+            newMol->getAtomWithIdx(i)->setMonomerInfo(info->copy());
+        }
+        return newMol;
+    };
 
 
 

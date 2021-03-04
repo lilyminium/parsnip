@@ -10,8 +10,10 @@
 #include <GraphMol/RDKitBase.h>
 #include <GraphMol/GraphMol.h>
 #include <GraphMol/MolOps.h>
+#include <GraphMol/MonomerInfo.h>
 
 #include "monomer.hpp"
+#include "utils.hpp"
 
 namespace polytop {
     
@@ -22,7 +24,7 @@ namespace polytop {
     }
 
     Monomer::Monomer(const RDKit::ROMol &mol, std::string name) : name(name) {
-        setRDMol(RDKit::RWMol(mol));
+        setRDMol(*(copyRDMol(mol)));
     }
 
     std::vector<unsigned int> Monomer::getAtomIndices() {
@@ -55,33 +57,35 @@ namespace polytop {
         return atoms.size();
     }
 
-    std::size_t Monomer::removeAtom(Atom *atom) {
+    std::size_t Monomer::removeAtom(Atom *atom, bool reindex) {
         rdMol.removeAtom(atom->rdAtom->getIdx());
         delAtomFromVector(atom);
-        reindexAtoms();
+        if (reindex) {reindexAtoms();};
         cleanParams();
         return atoms.size();
     };
 
     std::size_t Monomer::cleanTags() {
-        for (auto it = tags.begin(); it != tags.end();) {
+        for (auto it = tags->begin(); it != tags->end();) {
             if (containsAllAtoms(it->second->atoms)) {
                 ++it;
             } else {
-                it = tags.erase(it);
+                it = tags->erase(it);
             }
         }
-        return tags.size();
+        return tags->size();
     }
 
     void Monomer::setRDMol(RDKit::RWMol mol) {
         RDKit::MolOps::addHs(mol, true, true);
         rdMol = mol;
         auto numAtoms = rdMol.getNumAtoms();
+        atoms.clear();
         atoms.reserve(numAtoms);
 
         for (int i = 0; i < numAtoms; i++) {
             Atom *newAtom = new Atom(rdMol.getAtomWithIdx(i));
+            newAtom->setResName(name);
             atoms.emplace_back(newAtom);
         }
 
@@ -90,8 +94,9 @@ namespace polytop {
                                                    (*bndIt)->getEndAtomIdx()};
             std::array<Atom*, 2> atoms = getAtomsByIndices(indices);
             Bond *newBond = new Bond(atoms);
-            bonds.addParam(newBond);
+            bonds->addParam(newBond);
         }
+
     };
 
     std::vector<Atom*> Monomer::getAtomsByIndices(std::vector<unsigned int> indices) {
@@ -102,13 +107,13 @@ namespace polytop {
         return vec;
     }
 
-    void Monomer::replaceAtom(Atom *oldAtom, Atom *newAtom) {
-        bonds.updateAtom(oldAtom, newAtom);
-        pairs.updateAtom(oldAtom, newAtom);
-        exclusions.updateAtom(oldAtom, newAtom);
-        angles.updateAtom(oldAtom, newAtom);
-        dihedrals.updateAtom(oldAtom, newAtom);
-        impropers.updateAtom(oldAtom, newAtom);
+    void Monomer::replaceAtom(Atom *oldAtom, Atom *newAtom, bool reindex) {
+        bonds->updateAtom(oldAtom, newAtom);
+        pairs->updateAtom(oldAtom, newAtom);
+        exclusions->updateAtom(oldAtom, newAtom);
+        angles->updateAtom(oldAtom, newAtom);
+        dihedrals->updateAtom(oldAtom, newAtom);
+        impropers->updateAtom(oldAtom, newAtom);
         
         // replace bonds in rdMol
         RDKit::Atom *atom = oldAtom->rdAtom;
@@ -126,7 +131,7 @@ namespace polytop {
 
         }
         rdMol.updatePropertyCache();
-        removeAtom(oldAtom);
+        removeAtom(oldAtom, reindex);
     };
 
     void Monomer::removeParamsWithinAtomSet(std::set<Atom*> atomSet) {
@@ -152,9 +157,9 @@ namespace polytop {
         return delAtomFromVector(at);
     }
 
-    std::size_t Monomer::removeAtomByIndex(unsigned int index) {
+    std::size_t Monomer::removeAtomByIndex(unsigned int index, bool reindex) {
         auto at = atoms[index];
-        return removeAtom(at);
+        return removeAtom(at, reindex);
     }
 
     void Monomer::copyParamsFrom(Monomer* other) {
@@ -177,19 +182,19 @@ namespace polytop {
 
     void Monomer::reindexAtoms() {
         for (unsigned int i = 0; i < atoms.size(); i++) {
-            atoms[i]->index = i;
+            atoms[i]->setIndex(i);
             // atoms[i]->rdAtom->setIdx(i);
         }
     }
 
     Tag* Monomer::getFirstTagByName(std::string name) {
-        auto it = tags.find(name);
+        auto it = tags->find(name);
         return it->second;
     }
 
     Tag* Monomer::getLastTagByName(std::string name) {
         // TODO i'm sure I can do this better
-        auto range = tags.equal_range(name);
+        auto range = tags->equal_range(name);
         auto lastit = range.first;
         for (auto it = range.first; it != range.second; ++it) {
             lastit = it;
@@ -198,21 +203,21 @@ namespace polytop {
     }
 
     void Monomer::cleanParams() {
-        bonds.removeParamsNotInAtoms(atoms);
-        angles.removeParamsNotInAtoms(atoms);
-        dihedrals.removeParamsNotInAtoms(atoms);
-        impropers.removeParamsNotInAtoms(atoms);
-        pairs.removeParamsNotInAtoms(atoms);
-        exclusions.removeParamsNotInAtoms(atoms);
+        bonds->removeParamsNotInAtoms(atoms);
+        angles->removeParamsNotInAtoms(atoms);
+        dihedrals->removeParamsNotInAtoms(atoms);
+        impropers->removeParamsNotInAtoms(atoms);
+        pairs->removeParamsNotInAtoms(atoms);
+        exclusions->removeParamsNotInAtoms(atoms);
     }
 
     void Monomer::removeParamsWithinAtomSetFromVector(std::set<Atom*> atomSet) {
-        bonds.removeParamsWithinAtomSet(atomSet);
-        pairs.removeParamsWithinAtomSet(atomSet);
-        exclusions.removeParamsWithinAtomSet(atomSet);
-        angles.removeParamsWithinAtomSet(atomSet);
-        dihedrals.removeParamsWithinAtomSet(atomSet);
-        impropers.removeParamsWithinAtomSet(atomSet);
+        bonds->removeParamsWithinAtomSet(atomSet);
+        pairs->removeParamsWithinAtomSet(atomSet);
+        exclusions->removeParamsWithinAtomSet(atomSet);
+        angles->removeParamsWithinAtomSet(atomSet);
+        dihedrals->removeParamsWithinAtomSet(atomSet);
+        impropers->removeParamsWithinAtomSet(atomSet);
     }
 
     std::size_t Monomer::addTag(std::string name, std::vector<Atom*> atomVector) {
@@ -226,8 +231,8 @@ namespace polytop {
     }
 
     std::size_t Monomer::addTag(Tag* tag) {
-        tags.emplace(tag->name, tag);
-        return tags.size();
+        tags->emplace(tag->name, tag);
+        return tags->size();
     }
 
     std::size_t Monomer::copyTagFrom(Tag* tag) {
@@ -237,9 +242,9 @@ namespace polytop {
 
     std::size_t Monomer::safeAddTag(Tag* tag) {
         if (containsAllAtoms(tag->atoms)) {
-            tags.emplace(tag->name, tag);
+            tags->emplace(tag->name, tag);
         }
-        return tags.size();
+        return tags->size();
     }
 
     bool Monomer::containsAtom(Atom* atom) {
@@ -259,17 +264,17 @@ namespace polytop {
     }
 
     std::size_t Monomer::unsafeAddTagsFrom(Monomer* other) {
-        for (auto &el : other->tags) {
+        for (auto &el : *(other->tags)) {
             addTag(el.second);
         }
-        return tags.size();
+        return tags->size();
     }
 
     std::size_t Monomer::copyTagsFrom(Monomer* other) {
-        for (auto &el : other->tags) {
+        for (auto &el : *(other->tags)) {
             copyTagFrom(el.second);
         }
-        return tags.size();
+        return tags->size();
     }
 
     std::size_t Monomer::addTagsFrom(Monomer* other, bool checkContainsAtoms) {
@@ -278,10 +283,10 @@ namespace polytop {
     }
 
     std::size_t Monomer::safeAddTagsFrom(Monomer* other) {
-        for (auto &el : other->tags) {
+        for (auto &el : *(other->tags)) {
             safeAddTag(el.second);
         }
-        return tags.size();
+        return tags->size();
     }
 
     
@@ -291,14 +296,20 @@ namespace polytop {
 
     MonomerUnit::MonomerUnit(Monomer *mol) {
         // atoms
-        RDKit::RWMol *newMol = new RDKit::RWMol(mol->rdMol);
-        setRDMol(*newMol);
         name = mol->name;
+        RDKit::RWMol *newMol = copyRDMol(mol->rdMol);
+        setRDMol(*newMol);
 
-        bonds.clear();
+        bonds->clear();
         copyParamsFrom(mol);
         copyTagsFrom(mol);
     };
+
+    void MonomerUnit::setResNum(unsigned int resNum) {
+        for (auto at : atoms) {
+            at->setResNum(resNum);
+        }
+    }
 
 
 

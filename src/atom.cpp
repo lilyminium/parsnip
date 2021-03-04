@@ -18,7 +18,46 @@ namespace polytop {
     void Atom::setRDAtom(RDKit::Atom *atom) {
         index = atom->getIdx();
         if (name == "X") {name = atom->getSymbol();};
+
+        atom->setMonomerInfo(resInfo);
+        resInfo->setSerialNumber(index + 1);
+        resInfo->setName(name);
     };
+
+    void Atom::setResName(std::string resName) {
+        resInfo->setResidueName(resName);
+    };
+    std::string Atom::getResName() {
+        return resInfo->getResidueName();
+    };
+
+    void Atom::setResNum(unsigned int resNum) {
+        resInfo->setResidueNumber(resNum);
+    };
+
+    int Atom::getResNum() {
+        return resInfo->getResidueNumber();
+    }
+
+    void Atom::setIndex(unsigned int atomIndex) {
+        index = atomIndex;
+        resInfo->setSerialNumber(index + 1);
+    }
+
+    unsigned int Atom::getIndex() {
+        return index;
+    }
+
+    unsigned int Atom::getSerial() {
+        return resInfo->getSerialNumber();
+    }
+
+    void Atom::updateMonomerInfo() {
+        auto newInfo = new RDKit::AtomPDBResidueInfo(*resInfo);
+        rdAtom->setMonomerInfo(newInfo);
+    }
+
+
 
 };
 
