@@ -2,20 +2,26 @@
 #include <vector>
 #include <utility>
 
-#include "tag.h"
+#include "tag.hpp"
 
 namespace polytop {
-    Tag::Tag(Monomer *mol, std::string tagName, std::vector<int> indices) {
-        name = tagName;
-        owningMol = mol;
-        setAtomIndices(indices);
+    Tag::Tag(std::string name, std::vector<Atom*> atoms) : name(name), atoms(atoms) {};
+
+    std::vector<unsigned int> Tag::getAtomIndices() {
+        std::vector<unsigned int> indices;
+        for (auto &atom : atoms) {
+            indices.push_back(atom->index);
+        }
+        return indices;
+    };
+
+    std::size_t Tag::size() {
+        return atoms.size();
     }
 
-    void Tag::setAtomIndices(std::vector<int> indices) {
-        atomIndices = indices;
-        atoms.clear();
-        for (auto &el : indices) {
-            atoms.emplace_back(owningMol->atoms[*el]);
-        }
+    std::size_t Tag::minSize(Tag* other) {
+        std::size_t value = atoms.size();
+        if (other->size() < value) return other->size();
+        return value;
     }
 }

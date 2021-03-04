@@ -82,6 +82,10 @@
         "thread": "cpp",
         "stop_token": "cpp",
         "cinttypes": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "future": "cpp",
+        "regex": "cpp",
+        "shared_mutex": "cpp",
+        "variant": "cpp"
     }
 }
