@@ -291,13 +291,11 @@ namespace polytop {
 
     MonomerUnit::MonomerUnit(Monomer *mol) {
         // atoms
-        rdMol = RDKit::RWMol(mol->rdMol);
-        atoms.reserve(mol->atoms.size());
-        for (auto &atom : mol->atoms) {
-            Atom *newAtom = new Atom(*atom);
-            atoms.push_back(newAtom);
-        }
+        RDKit::RWMol *newMol = new RDKit::RWMol(mol->rdMol);
+        setRDMol(*newMol);
+        name = mol->name;
 
+        bonds.clear();
         copyParamsFrom(mol);
         copyTagsFrom(mol);
     };

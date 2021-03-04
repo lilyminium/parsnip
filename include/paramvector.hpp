@@ -25,6 +25,7 @@ namespace polytop {
             std::size_t removeParamsWithinAtomSet(std::set<Atom*>);
             std::size_t removeParamsNotInAtoms(std::vector<Atom*>);
             std::size_t size();
+            void clear();
 
             T* &operator[](int i) {
                 if ( i < 0 ) {
@@ -40,6 +41,9 @@ namespace polytop {
         data.emplace_back(param); //std::move(param));
         return data.size();
     };
+
+    template <typename T>
+    void ParamVector<T>::clear() { data.clear(); };
 
     template <typename T>
     std::size_t ParamVector<T>::size() { return data.size(); };
