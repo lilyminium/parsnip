@@ -54,6 +54,23 @@ TEST_CASE( "split integer into ratios", "[utils]") {
     REQUIRE( splitIntegerIntoRatio(10, {4, 6}) == IntVec({4, 6}) );
     REQUIRE( splitIntegerIntoRatio(9, {1, 2, 1}) == IntVec({3, 4, 2}) );
     REQUIRE( splitIntegerIntoRatio(28, {0.21, 0.79}) == IntVec({6, 22}) );
+};
+
+TEST_CASE("get unique RDKit mols", "[utils]") {
+    RDKit::RWMol *mol1 = PDBtoRDMol("m1_u4_c001_opt.pdb");
+    RDKit::RWMol *mol2 = PDBtoRDMol("m1_u4_c002_opt.pdb");
+    RDKit::RWMol *mol3 = PDBtoRDMol("m1_u4_c003_opt.pdb");
+    RDKit::RWMol *mol4 = PDBtoRDMol("m1_u4_c004_opt.pdb");
+    RDKit::RWMol *mol5 = PDBtoRDMol("m2_end_c002_opt.pdb");
+    RDKit::RWMol *mol6 = PDBtoRDMol("m2_end_c003_opt.pdb");
+    RDKit::RWMol *mol7 = PDBtoRDMol("m2_end_c004_opt.pdb");
+
+    std::vector<RDKit::RWMol*> mols;
+    mols = {mol1, mol2, mol3, mol4, mol5, mol6, mol7};
+    auto unique = getUniqueRDMols(mols);
+
+    REQUIRE( unique.size() == 2 );
+
 }
 
 

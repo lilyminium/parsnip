@@ -2,8 +2,10 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 #include <GraphMol/MonomerInfo.h>
+#include <GraphMol/SmilesParse/SmilesWrite.h>
 
 #include "utils.hpp"
 
@@ -51,26 +53,43 @@ std::vector<unsigned int> getNeighborInts(RDKit::RWMol rdMol,
     return neighbors;
     }
 
-    RDKit::RWMol* subsetRDMol(RDKit::RWMol rdMol, std::vector<unsigned int> indices) {
+    RDKit::RWMol* subsetRDMol(RDKit::RWMol rdMol, std::vector<unsigned int> indices,
+                              std::vector<unsigned int> neighbors) {
         RDKit::RWMol *newMol = new RDKit::RWMol();
         if (!indices.size()) return newMol;
-        auto length = indices.size();
 
         RDKit::Conformer *newConf = new RDKit::Conformer(newMol->getNumAtoms());
         newMol->addConformer(newConf);
         auto rdConf = rdMol.getConformer();
 
         // add atoms and geometry
-        for (std::size_t i = 0; i < length; i++) {
+        for (std::size_t i = 0; i < indices.size(); i++) {
             auto rdAtom = rdMol.getAtomWithIdx(indices[i]);
             newMol->addAtom(rdAtom);
             newConf->setAtomPos(i, rdConf.getAtomPos(indices[i]));
         }
+
+        auto length = indices.size();
+
+        for (std::size_t i = 0; i < neighbors.size(); i++) {
+            auto rdAtom = rdMol.getAtomWithIdx(neighbors[i]);
+            newMol->addAtom(rdAtom);
+            auto newAtom = newMol->getAtomWithIdx(length);
+            auto info = getMonomerInfo(newAtom);
+            info->setChainId("+");
+            newAtom->setMonomerInfo(info);
+            newConf->setAtomPos(length, rdConf.getAtomPos(neighbors[i]));
+            length++;
+        }
+
+        std::vector<unsigned int> combined;
+        combined.insert(combined.end(), indices.begin(), indices.end());
+        combined.insert(combined.end(), neighbors.begin(), neighbors.end());
         
         // add bonds
-        for (std::size_t i = 0; i < length; i++) {
-            for (std::size_t j = i; j < length; j++) {
-                auto newBond = rdMol.getBondBetweenAtoms(indices[i], indices[j]);
+        for (std::size_t i = 0; i < combined.size(); i++) {
+            for (std::size_t j = i; j < combined.size(); j++) {
+                auto newBond = rdMol.getBondBetweenAtoms(combined[i], combined[j]);
                 if (newBond) {
                     newMol->addBond(i, j);
                 }
@@ -78,7 +97,86 @@ std::vector<unsigned int> getNeighborInts(RDKit::RWMol rdMol,
         }
 
         return newMol;
+    };
+
+    // std::vector<RDKit::RWMol*> getUniqueRDMols(std::vector<RDKit::RWMol*> rdMols) {
+    //     std::unordered_map<std::string, RDKit::RWMol*> map;
+    //     std::vector<std::string> smiles;
+    //     // canonical smiles comparison is probably fine
+    //     for (auto &mol : rdMols) {
+    //         auto smi = RDKit::MolToSmiles(*mol);
+    //         map[smi] = mol;
+    //         smiles.emplace_back(smi);
+
+    //         // for (auto it = mol->beginAtoms(); it != mol->endAtoms()) {
+    //         //     // if (*it)->get
+    //         // }
+    //     }
+    //     std::vector<RDKit::RWMol*> unique;
+    //     for (auto el : map) {
+    //         unique.emplace_back(el.second);
+    //     }
+    //     return unique;
+    // };
+
+    // RDKit::AtomPDBResidueInfo* getMonomerInfo(RDKit::Atom atom) {
+    //     // This is annoying.
+    //     auto mInfo = atom->getMonomerInfo();
+    //     RDKit::AtomPDBResidueInfo* info = reinterpret_cast<RDKit::AtomPDBResidueInfo*>(mInfo);
+    //     return info;
+    // }
+
+
+
+
+    std::vector<RDKit::RWMol*> getUniqueRDMols(std::vector<RDKit::RWMol*> rdMols) {
+        std::unordered_map<std::string, RDKit::RWMol*> map;
+        std::vector<std::string> smiles;
+        // canonical smiles comparison is probably fine
+        for (auto &mol : rdMols) {
+            auto smi = RDKit::MolToSmiles(*mol);
+            map[smi] = mol;
+            smiles.emplace_back(smi);
+        }
+
+        std::vector<RDKit::RWMol*> unique;
+        std::unordered_map<std::string, unsigned int> indices;
+        for (auto el : map) {
+            unique.emplace_back(el.second);
+            indices[el.first] = indices.size();
+        }
+
+        for (auto &mol : unique) {
+            for (auto at = mol->beginAtoms(); at != mol->endAtoms()) {
+                auto info = getMonomerInfo(*at);
+                if (info->getChainId() == "+") { // cap atoms
+                    int index = info->getResidueNumber() - 1;
+                    std::string smi = smiles[index];
+                    int newIndex = indices[smi];
+                    info->setResidueNumber(newIndex);
+                }
+            }
+        }
+
+        return unique;
+    };
+
+    std::vector<unsigned int> getUnitIndices(std::vector<RDKit::RWMol*> uniqueUnits,
+                                             std::vector<RDKit::RWMol*> allUnits) {
+        std::unordered_map<std::string, unsigned int> unitMap;
+        for (std::size_t i = 0; i < uniqueUnits.size(); ++i) {
+            auto smi = RDKit::MolToSmiles(uniqueUnits[i]);
+            unitMap[smi] = i;
+        }
+
+        std::vector<unsigned int> unitIndices;
+        unitIndices.reserve(allUnits.size());
+        for (auto mol : allUnits) {
+            unitIndices.push_back(unitMap[RDKit::MolToSmiles(mol)]);
+        }
+        return unitIndices;
     }
+    
 
 
     std::vector<unsigned int> splitIntegerIntoRatio(unsigned int total,
@@ -140,6 +238,20 @@ std::vector<unsigned int> getNeighborInts(RDKit::RWMol rdMol,
         }
         return newMol;
     };
+
+    // std::unordered_multimap<std::string, RDKit::RWMol*> mapRDMols(std::vector<RDKit::RWMol*> rdMols) {
+    //     std::unordered_multimap<std::string, RDKit::RWMol*> map;
+    //     for (auto &mol : rdMols) {
+    //         auto smi = RDKit::MolToSmiles(*mol);
+    //         map[smi] = mol;
+    //     }
+    //     return map;
+    // }
+
+    // std::vector<RDKit::RWMol*> getUniqueMols(std::unordered_multimap<std::string, RDKit::RWMol*> map,
+    //                                          std::vector<RDKit::RWMol*> rdMols) {
+        
+    // }
 
 
 

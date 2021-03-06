@@ -22,6 +22,8 @@ namespace polytop {
             Polymer(std::string name_="UNK") : Monomer(name_) {}
 
             std::vector<MonomerUnit*> units;
+            // std::vector<MonomerUnit*> uniqueUnits;
+            // std::vector<unsigned int> unitIndices;
 
             void addMonomerUnit(MonomerUnit *unit, MonoPolyAtomIndexVect atomIndices,
                                bool replacePolymerAtoms=true);
@@ -45,11 +47,11 @@ namespace polytop {
 
             void reorderAtomsByMonomerUnit();
             void clearDeletedAtomsFromUnits();
-            void getCappedUnits(std::size_t numNeighbors=3);
+            std::vector<RDKit::RWMol*> getCappedUnits(std::size_t numNeighbors=3);
             void cleanUnitAtoms();
             void cleanUnitParams();
 
-            RDKit::RWMol* getRDUnit(MonomerUnit* unit, std::size_t numNeighbors);
+            RDKit::RWMol* getRDUnit(unsigned int unitIndex, std::size_t numNeighbors);
 
             // int addMonomer(Monomer monomer, bool useMonomerParams=true,
             //                bool replacePolymerAtoms=true);

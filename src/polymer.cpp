@@ -172,12 +172,12 @@ namespace polytop {
         }
     }
 
-    RDKit::RWMol* Polymer::getRDUnit(MonomerUnit* unit, std::size_t numNeighbors) {
+    RDKit::RWMol* Polymer::getRDUnit(unsigned int unitIndex, std::size_t numNeighbors) {
+        auto unit = units[unitIndex];
         std::vector<unsigned int> indices = unit->getAtomIndices();
         std::vector<unsigned int> neighbors = getNeighborInts(rdMol, indices, numNeighbors);
         
-        indices.insert(indices.end(), neighbors.begin(), neighbors.end());
-        return subsetRDMol(rdMol, indices);
+        return subsetRDMol(rdMol, indices, neighbors);
     }
 
     void Polymer::cleanUnitParams() {
@@ -186,17 +186,21 @@ namespace polytop {
         }
     }
 
-    void Polymer::getCappedUnits(std::size_t numNeighbors) {
+    std::vector<RDKit::RWMol*> Polymer::getCappedUnits(std::size_t numNeighbors) {
         reorderAtomsByMonomerUnit();
         cleanUnitAtoms();
-        std::vector<RDKit::RWMol*> uniqueCappedMols;
+        std::vector<RDKit::RWMol*> cappedUnits;
+        cappedUnits.reserve(units.size());
 
-        for (auto un : units) {
-            auto capped = getRDUnit(un, numNeighbors);
+        for (std::size_t i = 0; i < units.size(); ++i) {
+            auto mol = getRDUnit(i, numNeighbors);
+            cappedUnits.emplace_back(mol);
         }
-
-
+        return cappedUnits;
+        // auto uniqueUnits = getUniqueRDMols(cappedUnits);
+        // return uniqueUnits;
     }
+
 
 
 

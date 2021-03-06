@@ -15,7 +15,7 @@ using namespace polytop;
 TEST_CASE( "Creating a polymer", "[polymer]" ) {
 
     RDKit::RWMol *mol = PDBtoRDMol("m1_u4_c001_opt.pdb");
-    Monomer* mon = new Monomer(*mol, "M1");
+    Monomer* mon = new Monomer(*mol, "M1U");
     mon->addTag("left", {43, 46, 44, 45});
     mon->addTag("right", {48, 51, 53, 52});
 
@@ -87,7 +87,34 @@ TEST_CASE( "Creating a polymer", "[polymer]" ) {
                 REQUIRE( pol.units[2]->atoms.size() == 54 );
                 REQUIRE( pol.units[2]->bonds->size() == 53 );
 
-            }
+                SECTION("Test get RDUnit with 0 neighbors") {
+                    auto unit = pol.getRDUnit(1, 0);
+                    REQUIRE( unit->getNumAtoms() == 50 );
+                    REQUIRE( unit->getNumBonds() == 49 );
+                };
+
+                SECTION("Test get RDUnit with 1 neighbor") {
+                    auto unit = pol.getRDUnit(1, 1);
+                    REQUIRE( unit->getNumAtoms() == 52 );
+                    REQUIRE( unit->getNumBonds() == 51 );
+                };
+
+                SECTION("Test get RDUnit with 2 neighbors") {
+                    auto unit = pol.getRDUnit(1, 2);
+                    REQUIRE( unit->getNumAtoms() == 59 );
+                    REQUIRE( unit->getNumBonds() == 58 );
+                };
+
+                SECTION("Test get RDUnit with 3 neighbors") {
+                    auto unit = pol.getRDUnit(1, 3);
+
+                    RDKit::MolToPDBFile(*unit, "/Users/lily/Desktop/what.pdb");
+                    REQUIRE( unit->getNumAtoms() == 65 );
+                    REQUIRE( unit->getNumBonds() == 64 );
+                };
+
+
+            };
         };
         
     };
