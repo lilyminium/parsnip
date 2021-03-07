@@ -1,0 +1,29 @@
+Metadata-Version: 2.1
+Name: parsnip
+Version: 0+untagged.8.gb437dd2.dirty
+Summary: UNKNOWN
+Home-page: UNKNOWN
+Author: Lily Wang
+Author-email: lily.wang@anu.edu.au
+License: LGPLv3
+Description: parsnip
+        ==============================
+        [//]: # (Badges)
+        [![GitHub Actions Build Status](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/parsnip/workflows/CI/badge.svg)](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/parsnip/actions?query=workflow%3ACI)
+        [![codecov](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/parsnip/branch/master/graph/badge.svg)](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/parsnip/branch/master)
+        
+        
+        Build molecular topologies.
+        
+        ### Copyright
+        
+        Copyright (c) 2021, Lily Wang
+        
+        
+        #### Acknowledgements
+         
+        Project based on the 
+        [Computational Molecular Science Python Cookiecutter](https://github.com/molssi/cookiecutter-cms) version 1.5.
+        
+Platform: UNKNOWN
+Description-Content-Type: text/markdown
