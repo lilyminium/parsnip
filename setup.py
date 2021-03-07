@@ -147,7 +147,7 @@ def extensions(use_cython=True, debug_cflags=False):
                     extra_link_args= cpp_extra_link_args,
                     extra_compile_args=cpp_extra_compile_args)
 
-    pre_exts = [mon, pol]
+    pre_exts = [mon]
 
 
     cython_generated = []

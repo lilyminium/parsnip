@@ -1,16 +1,10 @@
 
 import pytest
-import rdkit
 
-from rdkit.Chem.rdmolfiles import MolFromPDBFile
 from parsnip.monomer import Monomer
 
-import MDAnalysis as mda
-
 from parsnip.tests.datafiles import m1c1
-
-def pdb2rdmol(pdb):
-    return MolFromPDBFile(pdb, False, False)
+from .utils import pdb2rdmol
 
 class TestMonomer:
 
