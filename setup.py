@@ -85,7 +85,9 @@ def extensions(use_cython=True, debug_cflags=False):
                             "-lRDKitMolAlign",
                             "-lRDKitSmilesParse",
                             "-lRDKitFileParsers",
-                            "-lRDKitRDGeneral",]
+                            "-lRDKitRDGeneral",
+                            "-lRDKitForceFieldHelpers",
+                            "-lRDKitMolStandardize"]
 
     define_macros = []
     if debug_cflags:

@@ -38,11 +38,11 @@ class TestPolymer:
     def test_add_units_via_tags(self, m1):
         polymer = Polymer()
         polymer.add_monomer(m1)
-        polymer.add_monomer(m1, "left", "right")
-
+        polymer.add_monomer(m1, monomer_tag="left", polymer_tag="right",
+                            replace_polymer_atoms=[[True, False, True, True]])
         assert polymer.n_atoms == 104
-        assert polymer.n_bonds == 103
-        assert polymer.n_tags == 3
+        assert polymer.n_bonds == 104
+        assert polymer.n_tags == 2
         assert len(polymer._universe.atoms) == 104
 
 

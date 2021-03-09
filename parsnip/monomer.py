@@ -2,6 +2,8 @@
 import pickle
 
 import MDAnalysis as mda
+import nglview as nv
+from rdkit import Chem
 
 from .lib import PyMonomer
 
@@ -14,6 +16,8 @@ class Monomer:
         return cls(mol, name)
     
     def __init__(self, rdmol, name="UNK"):
+        rdmol.UpdatePropertyCache()
+        Chem.GetSymmSSSR(rdmol)
         self._universe = mda.Universe(rdmol, format="RDKIT")
         pickled = rdmol.ToBinary()
         self._cymol = PyMonomer(pickled, name)
@@ -35,8 +39,27 @@ class Monomer:
     def n_bonds(self):
         return self._cymol.n_bonds
 
+    def view(self):
+        self.minimize()
+        view = nv.show_mdanalysis(self._universe.atoms)
+        view.clear_representations()
+        view.add_representation("ball+stick", selection="all")
+        return view
+
+    def show_tag(self, name, index=-1):
+        indices = self.get_tag_indices_by_name(name, index)
+        view = self.view()
+        view.add_representation("ball+stick", indices,
+                                opacity=0.3, color="orange",
+                                radius=0.3)
+        return view
+
     def add_tag(self, tag_name="tag", indices=[]):
         self._cymol.add_tag(tag_name, indices)
+
+    def get_tag_indices_by_name(self, name, index=-1):
+        return self._cymol.get_tag_indices_by_name(name, index)
+
 
     def del_atom_by_index(self, index):
         self._cymol.del_atom_by_index(index)
@@ -68,3 +91,6 @@ class Monomer:
 
     def write(self, filename):
         self._universe.atoms.write(filename)
+
+    def minimize(self, max_iter: int=1000, vdw_threshold: float=10):
+        self._cymol.minimize_rdmol(max_iter, vdw_threshold)

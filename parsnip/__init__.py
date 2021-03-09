@@ -7,6 +7,8 @@ Build molecular topologies.
 from .parsnip import *
 
 from .monomer import Monomer
+from .polymer import Polymer
+from .psiresp_helper import make_psiresp_job
 
 # Handle versioneer
 from ._version import get_versions
