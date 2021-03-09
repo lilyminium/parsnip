@@ -1,3 +1,5 @@
+from rdkit import Chem
+
 
 def isiterable(obj):
     """

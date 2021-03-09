@@ -1,7 +1,9 @@
 
 import pickle
+import copy
 
 from rdkit import Chem
+from rdkit.Chem.rdForceFieldHelpers import MMFFSanitizeMolecule, MMFFOptimizeMolecule
 
 import MDAnalysis as mda
 
@@ -62,14 +64,25 @@ class Polymer(Monomer):
         hmols = []
 
         # idk why I can't do this in C++ :(
-        for m in mols:
+        for i, m in enumerate(mols):
+            Chem.Cleanup(m)
             Chem.SanitizeMol(m)
             u = mda.Universe(m, format="RDKIT")
-            ix = [int(x) for x in u.select_atoms("icode +").indices]
-            newmol = Chem.AddHs(m, explicitOnly=True, addCoords=True, onlyOnAtoms=ix)
-            new_u = mda.Universe(newmol)
-            new_u.atoms[len(u.atoms):].altLocs = "-"
-            hmols.append(new_u.atoms.convert_to("RDKIT"))
-            # hmols.append(newmol)
+            ix = [int(x) for x in u.select_atoms("altLoc +").indices]
+            
+            newmol = Chem.AddHs(m, explicitOnly=False, addCoords=True, onlyOnAtoms=ix)
+
+            info = newmol.GetAtomWithIdx(0).GetMonomerInfo()
+
+            for i in range(len(u.atoms), newmol.GetNumAtoms()):
+                atom = newmol.GetAtomWithIdx(i)
+                info2 = type(info)("H", i+1, "-", info.GetResidueName(),
+                                   info.GetResidueNumber())
+                
+                atom.SetMonomerInfo(info2)
+
+            MMFFSanitizeMolecule(newmol)
+            MMFFOptimizeMolecule(newmol)
+            hmols.append(newmol)
         return hmols
  
