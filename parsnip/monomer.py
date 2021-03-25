@@ -18,6 +18,7 @@ class Monomer:
     def __init__(self, rdmol, name="UNK"):
         rdmol.UpdatePropertyCache()
         Chem.GetSymmSSSR(rdmol)
+        self._rdmol = rdmol
         self._universe = mda.Universe(rdmol, format="RDKIT")
         pickled = rdmol.ToBinary()
         self._cymol = PyMonomer(pickled, name)
@@ -45,6 +46,9 @@ class Monomer:
         view.clear_representations()
         view.add_representation("ball+stick", selection="all")
         return view
+
+    def view_2d(self):
+        return Chem.MolFromSmiles(Chem.MolToSmiles(self._rdmol))
 
     def show_tag(self, name, index=-1):
         indices = self.get_tag_indices_by_name(name, index)

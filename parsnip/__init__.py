@@ -4,7 +4,6 @@ Build molecular topologies.
 """
 
 # Add imports here
-from .parsnip import *
 
 from .monomer import Monomer
 from .polymer import Polymer

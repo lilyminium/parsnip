@@ -1,5 +1,5 @@
-from rdkit import Chem
 
+from rdkit import Chem
 
 def isiterable(obj):
     """
@@ -19,3 +19,6 @@ def asiterable(obj):
     if not isiterable(obj):
         obj = [obj]
     return obj
+
+def rdview(mol):
+    return Chem.MolFromSmiles(Chem.MolToSmiles(mol))

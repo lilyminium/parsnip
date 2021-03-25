@@ -25,7 +25,7 @@ def get_cap_constraints(universes=[]):
     chrconstrs = []
     for i, u in enumerate(universes):
         try:
-            ag = u.select_atoms("icode + -")
+            ag = u.select_atoms("altloc + -")
         except SelectionError:
             continue
         else:
@@ -33,10 +33,10 @@ def get_cap_constraints(universes=[]):
             constr = []
             for ix in ag.indices:
                 constr.append([i, int(ix)])
-            chrconstrs.append({0: constr})
+            chrconstrs.append([0, constr])
 
         # cap atoms with + should be equiv
-        ag = u.select_atoms("icode +")
+        ag = u.select_atoms("altloc +")
         for at in ag:
             ix = int(at.index)
             other = [int(at.resid), int(at.id) - 1]
@@ -74,11 +74,21 @@ def make_psiresp_job(rdmols=[], suffix="pdb", name="psiresp",
     )
 
     chrequiv_yml = yaml.dump({'inter_chrequiv': chrequivs},
-                              default_flow_style=True)[1:-1]
+                              default_flow_style=True)[1:-2]
     chrconstr_yml = yaml.dump({'inter_chrconstr': chrconstrs},
-                               default_flow_style=True)[1:-1]
+                               default_flow_style=True)[1:-2]
     other = yaml.dump(dct, default_flow_style=False)
 
     with open(jobfile, "w") as f:
         f.write("\n".join([other, chrequiv_yml, chrconstr_yml]))
 
+
+
+def write_polymer_script(unit_indices, universes, names, suffix="pdb"):
+    monomers = {}
+
+    for uname, u in zip(names, universes):
+        mon = {"file": f"{uname}_charged.topcrd",}
+    for uix in unit_indices:
+        uname = names[uix]
+        
