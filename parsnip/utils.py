@@ -36,7 +36,6 @@ def cached(func):
            def__init__(self):
                self._cache = dict()
 
-           @property
            @cached('keyname')
            def size(self):
                # This code gets run only if the lookup of keyname fails
@@ -46,7 +45,7 @@ def cached(func):
 
     .. note::
 
-        Copied from MDAnalysis.
+        Adapted from MDAnalysis.
     """
 
     key = func.__name__
@@ -57,7 +56,7 @@ def cached(func):
         except KeyError:
             self._cache[key] = ret = func(self, *args, **kwargs)
             return ret
-    return wrapper
+    return property(wrapper)
 
 def uncache(*keys):
     def refresh_cache(func):
@@ -68,3 +67,54 @@ def uncache(*keys):
             return func(self, *args, **kwargs)
         return wrapper
     return refresh_cache
+
+
+# std::vector<unsigned int> splitIntegerIntoRatio(unsigned int total,
+#                                                     std::vector<double> ratio) {
+#         double ratioTotal = std::accumulate(ratio.begin(), ratio.end(),
+#                                             decltype(ratio)::value_type(0));
+
+#         std::vector<double> currentFraction;
+#         std::vector<double> fraction;
+#         fraction.reserve(ratio.size());
+#         currentFraction.reserve(ratio.size());
+
+#         for (auto r : ratio) {
+#             fraction.push_back(r/ratioTotal);
+#             currentFraction.push_back(0);
+#         }
+
+        
+#         std::vector<unsigned int> currentRatio;
+#         double smallest = *std::min_element(ratio.begin(), ratio.end());
+#         for (auto &el : ratio) {
+#             currentRatio.push_back(el/smallest);
+#         }
+#         unsigned int currentTotal = std::accumulate(currentRatio.begin(), currentRatio.end(),
+#                                                     decltype(currentRatio)::value_type(0));
+        
+#         int quotient = (total / currentTotal) - 1;
+#         if (quotient) {
+#             for (std::size_t i = 0; i < currentRatio.size(); i++) {
+#                 currentRatio[i] *= quotient;
+#             };
+#         };
+
+#         currentTotal = std::accumulate(currentRatio.begin(), currentRatio.end(),
+#                                        decltype(currentRatio)::value_type(0));
+        
+#         while (currentTotal < total) {
+#             for (std::size_t i = 0; i < currentRatio.size(); i++ ) {
+#                 currentFraction[i] = double(currentRatio[i]) / total;
+#                 currentFraction[i] /= fraction[i];
+#             };
+
+#             auto it = std::min_element(currentFraction.begin(), currentFraction.end());
+#             unsigned int minIndex = std::distance(currentFraction.begin(), it);
+#             currentRatio[minIndex] += 1;
+#             currentTotal = std::accumulate(currentRatio.begin(), currentRatio.end(),
+#                                            decltype(currentRatio)::value_type(0));
+#         }
+
+#         return currentRatio;
+#     };

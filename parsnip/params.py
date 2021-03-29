@@ -19,7 +19,7 @@ class Param:
         assert len(values) == self.n_atoms, err
         if values[0].index > values[-1].index:
             values = values[::-1]
-        self._atoms[:] = atoms
+        self._atoms[:] = values
 
     @property
     def indices(self):
@@ -34,6 +34,9 @@ class Param:
     def within_atoms(self, atoms):
         # TODO: can numpy do sets better??
         atoms = np.fromiter(atoms, Atom)
+        return np.all(np.isin(self.atoms, atoms))
+
+    def _within_atom_array(self, atoms):
         return np.all(np.isin(self.atoms, atoms))
     
 

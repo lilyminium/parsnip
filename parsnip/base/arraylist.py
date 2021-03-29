@@ -7,6 +7,7 @@ from .mixins import TypeMimicMixin, ContainsIndicesMixin, CachedIndicesMixin
 
 
 class ArrayList(TypeMimicMixin, UserList):
+    """Pretend to be a mutable array"""
 
     def __init__(self, items=None):
         self._cache = {}
@@ -23,7 +24,7 @@ class ArrayList(TypeMimicMixin, UserList):
     def copy(self):
         return type(self)(self._data)
 
-    @property
+
     @cached
     def _array(self):
         return np.array(self._data)
@@ -49,7 +50,7 @@ class ArrayList(TypeMimicMixin, UserList):
 
     @uncache("_array")
     def extend(self, items):
-        self._data.extend(items)
+        self._data.extend(list(items))
 
     @uncache("_array")
     def remove(self, item):
@@ -60,8 +61,10 @@ class ArrayList(TypeMimicMixin, UserList):
         self._data = []
 
 
-class ArrayListWithIndices(CachedIndicesMixin, ContainsIndicesMixin, ArrayList):
-    append = uncache("_indices")(ArrayList.append)
+class ArrayListWithIndices(ContainsIndicesMixin, CachedIndicesMixin, ArrayList):
+    """Pretend to be a mutable array of items with indices"""
+
+    append = uncache("_indices",)(ArrayList.append)
     extend = uncache("_indices")(ArrayList.extend)
     remove = uncache("_indices")(ArrayList.remove)
     clear = uncache("_indices")(ArrayList.clear)
@@ -73,25 +76,36 @@ class ArrayListWithIndices(CachedIndicesMixin, ContainsIndicesMixin, ArrayList):
 
 
 class ParamList(ArrayListWithIndices):
-    append = uncache("_atoms")(ArrayListWithIndices.append)
-    extend = uncache("_atoms")(ArrayListWithIndices.extend)
-    remove = uncache("_atoms")(ArrayListWithIndices.remove)
-    clear = uncache("_atoms")(ArrayListWithIndices.clear)
+    append = uncache("_atoms", "_indices")(ArrayList.append)
+    remove = uncache("_atoms", "_indices")(ArrayList.remove)
+    clear = uncache("_atoms", "_indices")(ArrayList.clear)
 
     @cached
     def _atoms(self):
         return np.array([x.atoms for x in self._data])
 
+    @uncache("_array", "_atoms", "_indices")
+    def extend(self, items):
+        try:
+            items = items._data
+        except AttributeError:
+            pass
+        self._data.extend(items)
+
     @property
     def atoms(self):
         return self._atoms
 
-    @uncache("_atoms", "_indices")
+    @uncache("_atoms", "_indices", "_array")
     def remove_within_atoms(self, atoms):
+        if not len(self._data):
+            return
         mask = np.all(np.isin(self.atoms, atoms), axis=-1)
-        self._data = list(self._array[~mask])
+        self._data = self._array[~mask].tolist()
 
-    @uncache("_atoms", "_indices")
+    @uncache("_atoms", "_indices", "_array")
     def keep_within_atoms(self, atoms):
+        if not len(self._data):
+            return
         mask = np.all(np.isin(self.atoms, atoms), axis=-1)
-        self._data = list(self._array[mask])
+        self._data = self._array[mask].tolist()

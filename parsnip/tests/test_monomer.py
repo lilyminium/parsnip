@@ -23,7 +23,7 @@ class TestMonomer:
     def test_add_tag(self):
         mol = pdb2rdmol(m1c1)
         monomer = Monomer(mol)
-        monomer.add_tag("left", [43, 46, 44, 45])
+        monomer.add_tag_from_atom_indices("left", [43, 46, 44, 45])
         assert monomer.n_tags == 1
 
 

@@ -1,25 +1,40 @@
 
 from rdkit import Chem
+from . import rdutils
 
 class Atom:
 
-    def __init__(self, rdatom, name="", charge=0):
-        self.index = rdatom.GetIdx()
+    _default_resname = "UNK"
+    _default_resid = 1
 
+    def __init__(self, rdatom, name=None, charge=0):
+        info = rdutils.get_pdbinfo(rdatom)
+        self._pdbinfo = info
+        
+        self.rdatom = rdatom
+        self.rdatom.SetMonomerInfo(info)
+        
+        self.index = rdatom.GetIdx()
         if not name:
             name = rdatom.GetSymbol()
         self.name = name
         self.charge = charge
-        self.rdatom = rdatom
-        info = rdatom.GetPDBResidueInfo()
-
-        #TODO: should I copy the aton and/or info?
-
-        if info is None:
-            info = Chem.AtomPDBResidueInfo()
-            info.SetName(name)
         
-        rdatom.SetMonomerInfo(info)
+
+    @property
+    def rdatom(self):
+        return self._rdatom
+
+    @rdatom.setter
+    def rdatom(self, atom):
+        self._rdatom = atom
+
+    @property
+    def pdbinfo(self):
+        return self._pdbinfo
+
+    @pdbinfo.setter
+    def pdbinfo(self, info):
         self._pdbinfo = info
     
     @property
@@ -28,7 +43,10 @@ class Atom:
     
     @property
     def resname(self):
-        return self._pdbinfo.GetResidueName()
+        try:
+            return self._pdbinfo.GetResidueName()
+        except AttributeError:
+            return self._default_resname
 
     @resname.setter
     def resname(self, name):
@@ -36,11 +54,14 @@ class Atom:
     
     @property
     def resid(self):
-        return self._pdbinfo.GetResidueNumber()
+        try:
+            return self._pdbinfo.GetResidueNumber()
+        except AttributeError:
+            return self._default_resid
 
     @resid.setter
     def resid(self, value):
-        self._pdbinfo.SetResidueNumber(value)
+        self._pdbinfo.SetResidueNumber(int(value))
     
     @property
     def index(self):

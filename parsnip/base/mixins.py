@@ -50,7 +50,7 @@ class CachedIndicesMixin(TypeMimicMixin):
 
     @cached
     def _indices(self):
-        return np.array([x.indices for x in self._array])
+        return np.array([x.indices for x in self._array], dtype=np.uint32)
 
 
 class ContainsIndicesMixin:

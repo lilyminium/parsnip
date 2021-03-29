@@ -23,7 +23,6 @@ class Molecule:
     """
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         self._atoms = ArrayListWithIndices()
         self._bonds = ParamList()
         self._angles = ParamList()
@@ -48,6 +47,10 @@ class Molecule:
     @bonds.setter
     def bonds(self, iterable):
         self._bonds = ParamList(iterable)
+
+    @property
+    def n_bonds(self):
+        return len(self.bonds)
     
     @property
     def angles(self):
@@ -56,6 +59,10 @@ class Molecule:
     @angles.setter
     def angles(self, iterable):
         self._angles = ParamList(iterable)
+    
+    @property
+    def n_angles(self):
+        return len(self.angles)
 
     @property
     def dihedrals(self):
@@ -64,6 +71,10 @@ class Molecule:
     @dihedrals.setter
     def dihedrals(self, iterable):
         self._dihedrals = ParamList(iterable)
+    
+    @property
+    def n_dihedrals(self):
+        return len(self.dihedrals)
 
     @property
     def impropers(self):
@@ -72,6 +83,10 @@ class Molecule:
     @impropers.setter
     def impropers(self, iterable):
         self._impropers = ParamList(iterable)
+    
+    @property
+    def n_impropers(self):
+        return len(self.impropers)
 
     @property
     def pairs(self):
@@ -80,6 +95,10 @@ class Molecule:
     @pairs.setter
     def pairs(self, iterable):
         self._pairs = ParamList(iterable)
+    
+    @property
+    def n_pairs(self):
+        return len(self.pairs)
 
     @property
     def exclusions(self):
@@ -90,12 +109,20 @@ class Molecule:
         self._exclusions = ParamList(iterable)
 
     @property
+    def n_exclusions(self):
+        return len(self.exclusions)
+
+    @property
     def tags(self):
         return self._tags
     
     @tags.setter
     def tags(self, iterable):
         self._tags = TagDict(iterable)
+
+    @property
+    def n_tags(self):
+        return len(self.tags)
     
     @property
     def params(self):
@@ -103,21 +130,30 @@ class Molecule:
                 self.impropers, self.pairs, self.exclusions]
 
     @property
+    def paramnames(self):
+        return ["bonds", "angles", "dihedrals",
+                "impropers", "pairs", "exclusions"]
+
+    @property
     def n_atoms(self):
         return len(self.atoms)
 
-    def remove_atoms(self, atoms):
-        mask = ~np.isin(self.atoms, atoms)
-        self.atoms = self.atoms[mask]
+    
 
     def remove_params_within_atoms(self, atoms):
         arr = np.array(atoms)
         for params in self.params:
-            params.remove_within_atoms(self.atoms)
+            params.remove_within_atoms(atoms)
     
     def clean(self):
+        self.reindex_atoms()
+        self.reset_rdatoms()
         self.clean_params()
         self.clean_tags()
+    
+    def reset_rdatoms(self):
+        for rdat, at in zip(self.rdmol.GetAtoms(), self.atoms):
+            at.rdatom = rdat
 
     def clean_params(self):
         for params in self.params:
@@ -147,14 +183,31 @@ class Molecule:
 
     def reindex_atoms(self):
         for i, atom in enumerate(self.atoms):
-            atoms.index = i
+            atom.index = i
+        self._atoms._cache.pop("_indices", None)
+
+    def add_tag_copy(self, tag):
+        self.add_tag_from_atom_indices(tag.name, tag.indices)
     
+
+    def copy_tags_from(self, other):
+        for tag in other.tags.itertags():
+            self.add_tag_copy(tag)
+
+    def copy_param(self, item):
+        return type(item)(self.atoms[item.indices])
+
+    def copy_params_from(self, other):
+        for self_list, other_list in zip(self.params, other.params):
+            for item in other_list:
+                self_list.append(self.copy_param(item))
 
 
 
 class RDMolecule(Molecule):
 
-    """Sigh don't mess with this stuff either"""
+    """Please don't mess with the rdmol stuff either"""
+
 
     def __init__(self, rdmol, *args, **kwargs):
         super().__init__()
@@ -166,7 +219,7 @@ class RDMolecule(Molecule):
 
     @rdmol.setter
     def rdmol(self, mol):
-        rdmol = Chem.AddHs(rdmol, explicitOnly=True, addCoords=True)
+        rdmol = Chem.AddHs(mol, explicitOnly=True, addCoords=True)
         self._rdmol = Chem.rdchem.RWMol(rdmol)
         self.atoms.clear()
         for params in self.params:
@@ -174,7 +227,7 @@ class RDMolecule(Molecule):
         self.tags.clear()
 
         for i, atom in enumerate(self.rdmol.GetAtoms()):
-            at = Atom(atom, name=atom.GetName())
+            at = Atom(atom, name=atom.GetSymbol())
             self.atoms.append(at)
 
         for i, bond in enumerate(self.rdmol.GetBonds()):
@@ -191,7 +244,7 @@ class RDMolecule(Molecule):
         seen = []
         for a, b in pairs:
             paths = nx.all_simple_paths(graph, source=a, target=b, cutoff=4)
-            paths = [x for x in paths if len(paths) > 2]
+            paths = [x for x in paths if len(x) > 2]
             for path in paths:
                 if path in seen or path[::-1] in seen:
                     continue
@@ -219,6 +272,21 @@ class RDMolecule(Molecule):
         return Chem.MolFromSmiles(Chem.MolToSmiles(self.rdmol))
 
     def minimize(self, max_iter: int=1000, nb_threshold: float=25):
-        Chem.SymmetrizeSSSR(self.rdmol)
+        # Chem.symmetrizeSSSR(self.rdmol)
+        try:
+            Chem.SanitizeMol(self.rdmol)
+        except:  # AtomValenceException
+            pass
         AllChem.MMFFOptimizeMolecule(self.rdmol, maxIters=max_iter,
                                      nonBondedThresh=nb_threshold)
+
+    def remove_atoms(self, atoms):
+        mask = np.isin(self.atoms, atoms)
+        remove = np.arange(self.n_atoms)[mask]
+        for i in remove[::-1]:
+            self.rdmol.RemoveAtom(int(i))
+        try:
+            Chem.SanitizeMol(self.rdmol)
+        except Chem.rdchem.AtomValenceException:
+            pass
+        self.atoms = self.atoms[~mask]

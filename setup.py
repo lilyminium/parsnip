@@ -130,58 +130,58 @@ def extensions(use_cython=True, debug_cflags=False):
     if cython_linetrace:
         cpp_extra_compile_args.append("-DCYTHON_TRACE_NOGIL")
 
-    mon = Extension('parsnip.lib.pymonomer',
-                    ['parsnip/lib/pymonomer' + cpp_source_suffix,
-                     "parsnip/lib/src/utils.cpp",
-                     "parsnip/lib/src/atom.cpp",
-                     "parsnip/lib/src/tag.cpp",],
-                    language="c++",
-                    include_dirs=include_dirs + ['parsnip/lib/include'],
-                    define_macros=define_macros,
-                    extra_link_args= cpp_extra_link_args,
-                    extra_compile_args=cpp_extra_compile_args)
+    # mon = Extension('parsnip.lib.pymonomer',
+    #                 ['parsnip/lib/pymonomer' + cpp_source_suffix,
+    #                  "parsnip/lib/src/utils.cpp",
+    #                  "parsnip/lib/src/atom.cpp",
+    #                  "parsnip/lib/src/tag.cpp",],
+    #                 language="c++",
+    #                 include_dirs=include_dirs + ['parsnip/lib/include'],
+    #                 define_macros=define_macros,
+    #                 extra_link_args= cpp_extra_link_args,
+    #                 extra_compile_args=cpp_extra_compile_args)
     
-    pol = Extension('parsnip.lib.pypolymer',
-                    ['parsnip/lib/pypolymer' + cpp_source_suffix],
-                    language="c++",
-                    include_dirs=include_dirs + ['parsnip/lib/include'],
-                    define_macros=define_macros,
-                    extra_link_args= cpp_extra_link_args,
-                    extra_compile_args=cpp_extra_compile_args)
+    # pol = Extension('parsnip.lib.pypolymer',
+    #                 ['parsnip/lib/pypolymer' + cpp_source_suffix],
+    #                 language="c++",
+    #                 include_dirs=include_dirs + ['parsnip/lib/include'],
+    #                 define_macros=define_macros,
+    #                 extra_link_args= cpp_extra_link_args,
+    #                 extra_compile_args=cpp_extra_compile_args)
 
-    pre_exts = [mon]
+    # pre_exts = [mon]
 
 
-    cython_generated = []
-    if use_cython:
-        extensions = cythonize(
-            pre_exts,
-            compiler_directives={'linetrace' : cython_linetrace,
-                                 'embedsignature' : False},
-        )
-        if cython_linetrace:
-            print("Cython coverage will be enabled")
-        for pre_ext, post_ext in zip(pre_exts, extensions):
-            for source in post_ext.sources:
-                if source not in pre_ext.sources:
-                    cython_generated.append(source)
-    else:
-        #Let's check early for missing .c files
-        extensions = pre_exts
-        for ext in extensions:
-            for source in ext.sources:
-                if not (os.path.isfile(source) and
-                        os.access(source, os.R_OK)):
-                    raise IOError("Source file '{}' not found. This might be "
-                                "caused by a missing Cython install, or a "
-                                "failed/disabled Cython build.".format(source))
-    return extensions, cython_generated
+    # cython_generated = []
+    # if use_cython:
+    #     extensions = cythonize(
+    #         pre_exts,
+    #         compiler_directives={'linetrace' : cython_linetrace,
+    #                              'embedsignature' : False},
+    #     )
+    #     if cython_linetrace:
+    #         print("Cython coverage will be enabled")
+    #     for pre_ext, post_ext in zip(pre_exts, extensions):
+    #         for source in post_ext.sources:
+    #             if source not in pre_ext.sources:
+    #                 cython_generated.append(source)
+    # else:
+    #     #Let's check early for missing .c files
+    #     extensions = pre_exts
+    #     for ext in extensions:
+    #         for source in ext.sources:
+    #             if not (os.path.isfile(source) and
+    #                     os.access(source, os.R_OK)):
+    #                 raise IOError("Source file '{}' not found. This might be "
+    #                             "caused by a missing Cython install, or a "
+    #                             "failed/disabled Cython build.".format(source))
+    # return extensions, cython_generated
 
 
 
 
 if __name__ == "__main__":
-    exts, cythonfiles = extensions(use_cython=not is_release)
+    # exts, cythonfiles = extensions(use_cython=not is_release)
 
 
     setup(
@@ -195,7 +195,7 @@ if __name__ == "__main__":
         version=versioneer.get_version(),
         cmdclass=versioneer.get_cmdclass(),
         license='LGPLv3',
-        ext_modules = exts,
+        # ext_modules = exts,
 
         # Which Python importable modules should be included when your package is installed
         # Handled automatically by setuptools. Use 'exclude' to prevent some specific

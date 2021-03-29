@@ -15,8 +15,7 @@ class Tag:
     def indices(self):
         return np.array([a.index for a in self.atoms])
 
-
-class TagDict(CachedIndicesMixin, ArrayDict):
+class TagDict(CachedIndicesMixin, UserDict):
     def __init__(self, *args, **kwargs):
         self._cache = {}
         self._data = defaultdict(ParamList)
@@ -35,6 +34,9 @@ class TagDict(CachedIndicesMixin, ArrayDict):
     def __setitem__(self, key, items):
         self._data[key] = ParamList(items)
 
+    def __len__(self):
+        return len(self._array)
+
     @cached
     def _array(self):
         return np.array(list(self.itertags()))
@@ -46,7 +48,8 @@ class TagDict(CachedIndicesMixin, ArrayDict):
 
     @uncache("_array", "_indices")
     def clear(self):
-        self._data = defaultdict(list)
+        self._data = defaultdict(ParamList)
+
 
 
     # ========= mimic dict =========
@@ -70,7 +73,7 @@ class TagDict(CachedIndicesMixin, ArrayDict):
     @uncache("_array", "_indices")
     def extend(self, other):
         for key, value in other.items():
-            self._data[key].extend(asiterable(other))
+            self._data[key].extend(asiterable(value))
 
     def all_in_indices(self, indices):
         if len(self._indices) == 0:
