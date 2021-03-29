@@ -16,6 +16,7 @@ from .base import ArrayList
 
 
 class Polymer(Monomer):
+
     
     def __init__(self, name: str="UNK"):
         mol = Chem.rdchem.RWMol()
@@ -218,6 +219,8 @@ class Polymer(Monomer):
         keys, values = zip(*capped_units.items())
         keys = list(keys)
         indices = [keys.index(x) for x in smiles]
+        # for mol in values:
+        #     Chem.SanitizeMol(mol)
         return values, indices
         
         
@@ -251,7 +254,7 @@ class Polymer(Monomer):
             at = capped.GetAtomWithIdx(new)
             old_info = at.GetPDBResidueInfo()
             info = rdutils.copy_pdbinfo(old_info)
-            info.SetAltLoc("+")
+            # info.SetAltLoc("+")
             at.SetMonomerInfo(info)
             at.SetNoImplicit(False)
             new_conf.SetAtomPosition(new, list(conf.GetAtomPosition(ix)))
@@ -269,18 +272,36 @@ class Polymer(Monomer):
 
         capped.AddConformer(new_conf)
         # add Hs
-        Chem.SanitizeMol(capped)
+        Chem.SanitizeMol(capped,
+            (
+                Chem.SANITIZE_ALL
+                ^ Chem.SANITIZE_SETAROMATICITY
+                ^ Chem.SANITIZE_ADJUSTHS
+                ^ Chem.SANITIZE_CLEANUPCHIRALITY
+                ^ Chem.SANITIZE_KEKULIZE
+            ),)
         hcapped = Chem.AddHs(capped, explicitOnly=False, addCoords=True,
                              onlyOnAtoms=only_on_atoms)
-        info_template = hcapped.GetAtomWithIdx(0).GetPDBResidueInfo()
-        for i in range(capped_ints[-1], hcapped.GetNumAtoms()):
-            at = hcapped.GetAtomWithIdx(i)
-            new_info = rdutils.copy_pdbinfo(info_template)
-            new_info.SetName("H")
-            new_info.SetAltLoc("-")
-            at.SetMonomerInfo(new_info)
+        # info_template = hcapped.GetAtomWithIdx(0).GetPDBResidueInfo()
+        # for i in range(capped_ints[-1], hcapped.GetNumAtoms()):
+        #     at = hcapped.GetAtomWithIdx(i)
+        #     new_info = rdutils.copy_pdbinfo(info_template)
+        #     new_info.SetName("H")
+        #     new_info.SetAltLoc("-")
+        #     at.SetMonomerInfo(new_info)
         
-        Chem.SanitizeMol(hcapped)
+        # Chem.AssignStereochemistry(hcapped)
+        # Chem.SanitizeMol(hcapped)
+        # Chem.SanitizeMol(hcapped,
+        #     (
+        #         Chem.SANITIZE_ALL
+        #         ^ Chem.SANITIZE_SETAROMATICITY
+        #         ^ Chem.SANITIZE_ADJUSTHS
+        #         ^ Chem.SANITIZE_CLEANUPCHIRALITY
+        #         ^ Chem.SANITIZE_KEKULIZE
+        #     ),)
+
+        Chem.AssignStereochemistryFrom3D(hcapped, 0)
         return hcapped
 
 
